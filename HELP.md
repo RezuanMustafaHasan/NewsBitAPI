@@ -36,3 +36,22 @@ parent.
 To prevent this, the project POM contains empty overrides for these elements.
 If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
 
+### Run with Docker Compose
+
+Start the full stack (application + PostgreSQL):
+
+```bash
+docker compose up --build
+```
+
+Useful endpoints:
+
+* Application login: http://localhost:8080/login
+* PostgreSQL: localhost:5432
+
+To stop and remove containers:
+
+```bash
+docker compose down
+```
+
