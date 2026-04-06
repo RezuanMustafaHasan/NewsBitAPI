@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Article</title>
+    <style>
+        :root {
+            --bg: #f6f2ec;
+            --surface: rgba(255, 255, 255, 0.9);
+            --ink: #1d1916;
+            --muted: #6e655e;
+            --accent: #b45309;
+            --accent-dark: #8b3b05;
+            --border: rgba(29, 25, 22, 0.12);
+            --shadow: 0 24px 70px rgba(69, 43, 18, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(180, 83, 9, 0.12), transparent 22%),
+                radial-gradient(circle at bottom right, rgba(31, 41, 55, 0.08), transparent 24%),
+                linear-gradient(180deg, #fbf7f1, var(--bg));
+        }
+
+        .card {
+            width: min(860px, 100%);
+            margin: 0 auto;
+            padding: 28px;
+            border-radius: 28px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(2rem, 4vw, 2.8rem);
+        }
+
+        p {
+            margin: 0 0 22px;
+            color: var(--muted);
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+            font-weight: 600;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font: inherit;
+            background: rgba(255, 255, 255, 0.94);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .two-up {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .error {
+            margin-top: 6px;
+            color: #8b3b05;
+            font-size: 0.88rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .primary, .secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 150px;
+            padding: 14px 18px;
+            border-radius: 999px;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .primary {
+            border: none;
+            color: #fff8f1;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+        }
+
+        .secondary {
+            border: 1px solid var(--border);
+            color: var(--ink);
+            background: #fff;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 16px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .two-up {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="card">
+    <h1>Edit Article</h1>
+    <p>Update article content and metadata without changing its publication timestamp.</p>
+
+    <form th:action="@{/admin/articles/{id}(id=${articleId})}" th:object="${articleForm}" method="post">
+        <div class="field">
+            <label for="title">Title</label>
+            <input id="title" type="text" th:field="*{title}">
+            <div class="error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+        </div>
+
+        <div class="field">
+            <label for="summary">Summary</label>
+            <textarea id="summary" th:field="*{summary}"></textarea>
+            <div class="error" th:if="${#fields.hasErrors('summary')}" th:errors="*{summary}"></div>
+        </div>
+
+        <div class="field">
+            <label for="content">Content</label>
+            <textarea id="content" th:field="*{content}"></textarea>
+            <div class="error" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></div>
+        </div>
+
+        <div class="field">
+            <label for="imageUrl">Image URL</label>
+            <input id="imageUrl" type="text" th:field="*{imageUrl}">
+            <div class="error" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}"></div>
+        </div>
+
+        <div class="field">
+            <label for="category">Category</label>
+            <select id="category" th:field="*{category}">
+                <option value="">Select category</option>
+                <option th:each="category : ${categories}" th:value="${category}" th:text="${category}"></option>
+            </select>
+            <div class="error" th:if="${#fields.hasErrors('category')}" th:errors="*{category}"></div>
+        </div>
+
+        <div class="two-up">
+            <div class="field">
+                <label for="country">Country</label>
+                <input id="country" type="text" th:field="*{country}">
+                <div class="error" th:if="${#fields.hasErrors('country')}" th:errors="*{country}"></div>
+            </div>
+
+            <div class="field">
+                <label for="language">Language</label>
+                <input id="language" type="text" th:field="*{language}">
+                <div class="error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}"></div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="primary" type="submit">Save Changes</button>
+            <a class="secondary" th:href="@{/admin/articles}">Back to Dashboard</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>

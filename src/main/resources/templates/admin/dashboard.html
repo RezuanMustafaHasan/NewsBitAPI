@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        :root {
+            --bg: #f3f5ef;
+            --surface: rgba(255, 255, 255, 0.86);
+            --surface-strong: #ffffff;
+            --ink: #182021;
+            --muted: #657071;
+            --accent: #0f766e;
+            --accent-strong: #0c5c56;
+            --warning: #a33e28;
+            --border: rgba(24, 32, 33, 0.12);
+            --shadow: 0 28px 80px rgba(15, 38, 35, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top right, rgba(15, 118, 110, 0.14), transparent 24%),
+                radial-gradient(circle at bottom left, rgba(163, 62, 40, 0.12), transparent 20%),
+                linear-gradient(180deg, #f7f7f3, var(--bg));
+        }
+
+        .shell {
+            width: min(1280px, calc(100% - 32px));
+            margin: 24px auto 48px;
+        }
+
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: center;
+            padding: 28px 30px;
+            border-radius: 28px;
+            background: linear-gradient(140deg, rgba(255, 255, 255, 0.92), rgba(239, 247, 246, 0.92));
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .logout {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+            padding: 12px 18px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--surface-strong);
+            color: var(--ink);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.05fr 1.45fr;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .panel {
+            padding: 26px;
+            border-radius: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }
+
+        h2 {
+            margin: 0 0 16px;
+            font-size: 1.15rem;
+        }
+
+        .success {
+            margin-bottom: 18px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            color: #115e59;
+            background: rgba(15, 118, 110, 0.12);
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+            font-weight: 600;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            font: inherit;
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .two-up {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .error {
+            margin-top: 6px;
+            color: var(--warning);
+            font-size: 0.88rem;
+        }
+
+        .submit {
+            width: 100%;
+            padding: 14px 18px;
+            border: none;
+            border-radius: 999px;
+            font: inherit;
+            font-weight: 700;
+            color: #f7fffd;
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(24, 32, 33, 0.08);
+            vertical-align: top;
+            text-align: left;
+        }
+
+        th {
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        td small {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(15, 118, 110, 0.12);
+            color: var(--accent-strong);
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .link-btn, .delete-btn {
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .link-btn {
+            color: var(--accent-strong);
+            background: rgba(15, 118, 110, 0.12);
+        }
+
+        .delete-btn {
+            color: #fff7f5;
+            background: var(--warning);
+        }
+
+        .empty {
+            margin: 10px 0 0;
+            color: var(--muted);
+        }
+
+        @media (max-width: 960px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .shell {
+                width: min(100% - 20px, 100%);
+                margin: 16px auto 28px;
+            }
+
+            .panel, .hero {
+                padding: 20px;
+            }
+
+            .two-up {
+                grid-template-columns: 1fr;
+            }
+
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody tr {
+                padding: 14px 0;
+                border-bottom: 1px solid rgba(24, 32, 33, 0.08);
+            }
+
+            td {
+                border: none;
+                padding: 8px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="shell">
+    <section class="hero">
+        <div>
+            <h1>Newsroom Dashboard</h1>
+            <p>Create, update, and manage published articles while the REST API serves authenticated clients under <code>/v1</code>.</p>
+        </div>
+        <form th:action="@{/logout}" method="post">
+            <button class="logout" type="submit">Logout</button>
+        </form>
+    </section>
+
+    <section class="grid">
+        <div class="panel">
+            <h2>Create Article</h2>
+            <div class="success" th:if="${successMessage}" th:text="${successMessage}"></div>
+
+            <form th:action="@{/admin/articles}" th:object="${articleForm}" method="post">
+                <div class="field">
+                    <label for="title">Title</label>
+                    <input id="title" type="text" th:field="*{title}" placeholder="Headline">
+                    <div class="error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="summary">Summary</label>
+                    <textarea id="summary" th:field="*{summary}" placeholder="Short description"></textarea>
+                    <div class="error" th:if="${#fields.hasErrors('summary')}" th:errors="*{summary}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="content">Content</label>
+                    <textarea id="content" th:field="*{content}" placeholder="Full article body"></textarea>
+                    <div class="error" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="imageUrl">Image URL</label>
+                    <input id="imageUrl" type="text" th:field="*{imageUrl}" placeholder="https://example.com/image.jpg">
+                    <div class="error" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="category">Category</label>
+                    <select id="category" th:field="*{category}">
+                        <option value="">Select category</option>
+                        <option th:each="category : ${categories}" th:value="${category}" th:text="${category}"></option>
+                    </select>
+                    <div class="error" th:if="${#fields.hasErrors('category')}" th:errors="*{category}"></div>
+                </div>
+
+                <div class="two-up">
+                    <div class="field">
+                        <label for="country">Country</label>
+                        <input id="country" type="text" th:field="*{country}" placeholder="Optional">
+                        <div class="error" th:if="${#fields.hasErrors('country')}" th:errors="*{country}"></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="language">Language</label>
+                        <input id="language" type="text" th:field="*{language}" placeholder="Optional">
+                        <div class="error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}"></div>
+                    </div>
+                </div>
+
+                <button class="submit" type="submit">Publish Article</button>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>All Articles</h2>
+            <p class="empty" th:if="${#lists.isEmpty(articles)}">No articles available yet.</p>
+
+            <table th:if="${not #lists.isEmpty(articles)}">
+                <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Meta</th>
+                    <th>Views</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="article : ${articles}">
+                    <td>
+                        <strong th:text="${article.title}"></strong>
+                        <small th:text="${article.summary}"></small>
+                    </td>
+                    <td>
+                        <span class="pill" th:text="${article.category}"></span>
+                        <small>
+                            <span th:text="${article.country != null ? article.country : 'Global'}"></span>
+                            <span> • </span>
+                            <span th:text="${article.language != null ? article.language : 'N/A'}"></span>
+                            <span> • </span>
+                            <span th:text="${#temporals.format(article.createdAt, 'dd MMM yyyy HH:mm')}"></span>
+                        </small>
+                    </td>
+                    <td th:text="${article.views}"></td>
+                    <td>
+                        <div class="actions">
+                            <a class="link-btn" th:href="@{/admin/articles/{id}/edit(id=${article.id})}">Edit</a>
+                            <form th:action="@{/admin/articles/{id}/delete(id=${article.id})}" method="post">
+                                <button class="delete-btn" type="submit">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
