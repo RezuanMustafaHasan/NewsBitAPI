@@ -1,8 +1,7 @@
 package com.example.demo.article.model;
 
-import org.springframework.security.core.parameters.P;
-
 public enum ArticleCategory {
+    TOP,
     POLITICS,
     WORLD,
     TECHNOLOGY,
