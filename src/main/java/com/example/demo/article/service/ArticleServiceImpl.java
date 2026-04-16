@@ -32,9 +32,13 @@ import lombok.RequiredArgsConstructor;
 public class ArticleServiceImpl implements ArticleService {
 
     private static final Logger log = LoggerFactory.getLogger(ArticleServiceImpl.class);
-    private static final Sort FEED_SORT = Sort.by(Sort.Direction.DESC, "createdAt");
+    private static final Sort FEED_SORT = Sort.by(
+        Sort.Order.desc("createdAt"),
+        Sort.Order.desc("id")
+    );
 
     private final ArticleRepository articleRepository;
+    private final ArticleSummaryGenerator articleSummaryGenerator;
 
     @Override
     public ArticleResponse createArticle(ArticleRequest request) {
@@ -62,7 +66,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional(readOnly = true)
     public PagedResponse<ArticleSummaryResponse> getFeed(int page, int limit, ArticleCategory category, String country, String language) {
-        Pageable pageable = PageRequest.of(page, limit, FEED_SORT);
+        Pageable pageable = PageRequest.of(toZeroBasedPage(page), limit, FEED_SORT);
         Specification<Article> specification = Specification.allOf(
             ArticleSpecifications.hasCategory(category),
             ArticleSpecifications.hasCountry(country),
@@ -84,7 +88,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional(readOnly = true)
     public PagedResponse<ArticleSummaryResponse> searchArticles(String keyword, int page, int limit) {
-        Pageable pageable = PageRequest.of(page, limit, FEED_SORT);
+        Pageable pageable = PageRequest.of(toZeroBasedPage(page), limit, FEED_SORT);
         Page<Article> articlePage = articleRepository.searchByKeyword(keyword.trim(), pageable);
         return mapToPagedResponse(articlePage);
     }
@@ -136,7 +140,11 @@ public class ArticleServiceImpl implements ArticleService {
     private Article mapToEntity(ArticleRequest request, Article article) {
         article.setTitle(request.getTitle().trim());
         article.setContent(request.getContent().trim());
-        article.setSummary(request.getSummary().trim());
+        String summary = normalize(request.getSummary());
+        if (summary == null) {
+            summary = articleSummaryGenerator.generateSummary(article.getContent());
+        }
+        article.setSummary(summary);
         article.setImageUrl(normalize(request.getImageUrl()));
         article.setCategory(request.getCategory());
         article.setCountry(normalize(request.getCountry()));
@@ -154,12 +162,16 @@ public class ArticleServiceImpl implements ArticleService {
     private PagedResponse<ArticleSummaryResponse> mapToPagedResponse(Page<Article> page) {
         return PagedResponse.<ArticleSummaryResponse>builder()
             .content(page.stream().map(this::mapToSummary).toList())
-            .page(page.getNumber())
+            .page(page.getNumber() + 1)
             .limit(page.getSize())
             .totalElements(page.getTotalElements())
             .totalPages(page.getTotalPages())
             .last(page.isLast())
             .build();
+    }
+
+    private int toZeroBasedPage(int page) {
+        return Math.max(page - 1, 0);
     }
 
     private ArticleResponse mapToResponse(Article article) {

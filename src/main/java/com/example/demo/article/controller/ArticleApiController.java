@@ -31,9 +31,20 @@ public class ArticleApiController {
 
     @GetMapping("/feed")
     public PagedResponse<ArticleSummaryResponse> getFeed(
-        @RequestParam(defaultValue = "0") @Min(0) int page,
+        @RequestParam(defaultValue = "1") @Min(1) int page,
         @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit,
         @RequestParam(required = false) ArticleCategory category,
+        @RequestParam(required = false) String country,
+        @RequestParam(required = false) String language
+    ) {
+        return articleService.getFeed(page, limit, category, country, language);
+    }
+
+    @GetMapping("/categories/{category}/feed")
+    public PagedResponse<ArticleSummaryResponse> getFeedByCategory(
+        @PathVariable ArticleCategory category,
+        @RequestParam(defaultValue = "1") @Min(1) int page,
+        @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit,
         @RequestParam(required = false) String country,
         @RequestParam(required = false) String language
     ) {
@@ -53,7 +64,7 @@ public class ArticleApiController {
     @GetMapping("/search")
     public PagedResponse<ArticleSummaryResponse> search(
         @RequestParam("q") @NotBlank(message = "Search query is required.") String query,
-        @RequestParam(defaultValue = "0") @Min(0) int page,
+        @RequestParam(defaultValue = "1") @Min(1) int page,
         @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit
     ) {
         return articleService.searchArticles(query, page, limit);

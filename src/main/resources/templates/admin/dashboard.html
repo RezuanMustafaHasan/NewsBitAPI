@@ -290,15 +290,12 @@
                 </div>
 
                 <div class="field">
-                    <label for="summary">Summary</label>
-                    <textarea id="summary" th:field="*{summary}" placeholder="Short description"></textarea>
-                    <div class="error" th:if="${#fields.hasErrors('summary')}" th:errors="*{summary}"></div>
-                </div>
-
-                <div class="field">
                     <label for="content">Content</label>
                     <textarea id="content" th:field="*{content}" placeholder="Full article body"></textarea>
                     <div class="error" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></div>
+                    <small style="display:block;margin-top:8px;color:var(--muted);line-height:1.45;">
+                        Summary is auto-generated from content using Groq when you publish.
+                    </small>
                 </div>
 
                 <div class="field">

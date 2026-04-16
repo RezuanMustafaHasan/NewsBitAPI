@@ -20,7 +20,9 @@ NewsBit is a Spring Boot application that provides:
 - Full-text style search on article title and content
 - Trending endpoint based on views
 - Category listing endpoint
+- Category-wise feed endpoint
 - Admin dashboard for create, edit, delete article workflows
+- Auto-summary generation for new articles via Groq (`openai/gpt-oss-120b`)
 - HTTP Basic auth for API and form login for web UI
 
 ## Quick Start (Docker)
@@ -76,6 +78,10 @@ Required app variables:
 Optional:
 
 - `APP_LOG_LEVEL` (default `INFO`)
+- `SUMMARY_MAX_WORDS` (default `60`)
+- `GROQ_API_KEY` (required for Groq summarization)
+- `GROQ_BASE_URL` (default `https://api.groq.com/openai/v1`)
+- `GROQ_MODEL` (default `openai/gpt-oss-120b`)
 
 For Docker Compose, database container values are aligned with `DB_USERNAME` and `DB_PASSWORD` from `.env`.
 
@@ -111,21 +117,45 @@ All API endpoints below require Basic Auth.
 
 Query parameters:
 
-- `page` (default `0`, minimum `0`)
+- `page` (default `1`, minimum `1`)
 - `limit` (default `10`, min `1`, max `100`)
-- `category` (optional enum: `TOP`, `WORLD`, `TECHNOLOGY`, `SPORTS`, `BUSINESS`)
+- `category` (optional enum: `TOP`, `POLITICS`, `WORLD`, `TECHNOLOGY`, `SPORTS`, `BUSINESS`, `HEALTH`)
 - `country` (optional string)
 - `language` (optional string)
 
 Example:
 
 ```bash
-curl -u public:public123 "http://localhost:8080/v1/feed?page=0&limit=10&category=TECHNOLOGY&country=us&language=en"
+curl -u public:public123 "http://localhost:8080/v1/feed?page=1&limit=10&category=TECHNOLOGY&country=us&language=en"
 ```
 
 Returns: `PagedResponse<ArticleSummaryResponse>`
 
-### 2) Get Article by ID
+Behavior:
+
+- Latest articles appear first (`createdAt desc`, then `id desc` for stable paging)
+- `page=1` returns the latest 10 records when `limit=10`
+
+### 2) Get Feed by Category Path
+
+`GET /categories/{category}/feed`
+
+Query parameters:
+
+- `page` (default `1`, minimum `1`)
+- `limit` (default `10`, min `1`, max `100`)
+- `country` (optional string)
+- `language` (optional string)
+
+Example:
+
+```bash
+curl -u public:public123 "http://localhost:8080/v1/categories/TECHNOLOGY/feed?page=1&limit=10"
+```
+
+Returns: `PagedResponse<ArticleSummaryResponse>`
+
+### 3) Get Article by ID
 
 `GET /articles/{id}`
 
@@ -142,7 +172,7 @@ curl -u public:public123 "http://localhost:8080/v1/articles/1"
 
 Returns: `ArticleResponse`
 
-### 3) Get Categories
+### 4) Get Categories
 
 `GET /categories`
 
@@ -163,25 +193,25 @@ Example item:
 }
 ```
 
-### 4) Search Articles
+### 5) Search Articles
 
 `GET /search`
 
 Query parameters:
 
 - `q` (required, non-blank)
-- `page` (default `0`, minimum `0`)
+- `page` (default `1`, minimum `1`)
 - `limit` (default `10`, min `1`, max `100`)
 
 Example:
 
 ```bash
-curl -u public:public123 "http://localhost:8080/v1/search?q=ai&page=0&limit=10"
+curl -u public:public123 "http://localhost:8080/v1/search?q=ai&page=1&limit=10"
 ```
 
 Returns: `PagedResponse<ArticleSummaryResponse>`
 
-### 5) Get Trending
+### 6) Get Trending
 
 `GET /trending`
 
@@ -204,7 +234,7 @@ Returns: `List<ArticleSummaryResponse>`
 ```json
 {
   "content": [],
-  "page": 0,
+  "page": 1,
   "limit": 10,
   "totalElements": 0,
   "totalPages": 0,
@@ -268,6 +298,12 @@ After login as admin user, go to:
 - `GET /admin/articles/{id}/edit` edit page
 - `POST /admin/articles/{id}` update article
 - `POST /admin/articles/{id}/delete` delete article
+
+New article behavior:
+
+- During `POST /admin/articles`, summary is auto-generated from article content.
+- If `GROQ_API_KEY` is configured, summarization uses Groq OpenAI-compatible API with model `openai/gpt-oss-120b`.
+- If Groq is unavailable, the app falls back to a local first-60-words summary so publishing still succeeds.
 
 Note: Create/update/delete are currently available through the admin web interface, not public REST write endpoints.
 

@@ -23,7 +23,6 @@ public class ArticleRequest {
     @NotBlank(message = "Content is required.")
     private String content;
 
-    @NotBlank(message = "Summary is required.")
     private String summary;
 
     @Size(max = 500, message = "Image URL must be at most 500 characters.")
